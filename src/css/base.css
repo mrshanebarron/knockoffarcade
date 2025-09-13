@@ -1,0 +1,64 @@
+/* Base styles and CSS variables */
+:root {
+  --color-brown-primary: #8b4513;
+  --color-brown-secondary: #a0522d;
+  --color-brown-dark: #654321;
+  --color-brown-darker: #3e2723;
+  --color-brown-darkest: #2d1810;
+  --color-sand: #deb887;
+  --color-sand-light: #f4e4bc;
+  --color-sand-medium: #e6d7b8;
+  --color-gold: #daa520;
+  --color-gold-light: #ffd700;
+  --color-orange: #ff6600;
+  --color-red: #dc143c;
+  --color-green: #00ff7f;
+  --color-blue: #00ffff;
+  
+  --font-primary: 'Rye', 'New Rocker', 'Butcherman', serif;
+  --font-display: 'Butcherman', serif;
+  --font-accent: 'New Rocker', serif;
+  
+  --box-shadow-brown: 0 6px 12px rgba(139, 69, 19, 0.4);
+  --box-shadow-inset: inset 0 2px 4px rgba(222, 184, 135, 0.8);
+  --text-shadow-light: 1px 1px 0px rgba(222, 184, 135, 0.8);
+  --border-brown: 4px solid var(--color-brown-primary);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background: 
+    radial-gradient(ellipse at center, rgba(101, 67, 33, 0.8), rgba(62, 39, 35, 0.9)),
+    repeating-linear-gradient(
+      90deg,
+      var(--color-brown-primary) 0px,
+      var(--color-brown-secondary) 2px,
+      var(--color-brown-primary) 4px,
+      var(--color-brown-dark) 6px,
+      var(--color-brown-primary) 8px
+    ),
+    repeating-linear-gradient(
+      0deg,
+      transparent 0px,
+      rgba(139, 69, 19, 0.1) 1px,
+      transparent 2px
+    );
+  font-family: var(--font-primary);
+  color: var(--color-sand);
+  overflow: hidden;
+}
+
+.game-container {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+}
+
+.hidden {
+  display: none;
+}

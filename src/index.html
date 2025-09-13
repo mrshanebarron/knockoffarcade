@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🤠 GUNSLINGER'S BREAKOUT: WILD WEST SHOWDOWN 🔫</title>
+    <link rel="manifest" href="data:application/manifest+json;base64,eyJuYW1lIjoiQ3liZXIgQnJlYWtvdXQ6IE5lb24gQW5uaWhpbGF0aW9uIiwic2hvcnRfbmFtZSI6IkN5YmVyIEJyZWFrb3V0IiwiZGVzY3JpcHRpb24iOiJBbiBhZHZhbmNlZCBicmVha291dCBnYW1lIHdpdGggY3liZXJwdW5rIGFlc3RoZXRpY3MgYW5kIGFkdmFuY2VkIGdhbWVwbGF5IG1lY2hhbmljcyIsInN0YXJ0X3VybCI6Ii4vIiwiZGlzcGxheSI6InN0YW5kYWxvbmUiLCJiYWNrZ3JvdW5kX2NvbG9yIjoiIzAwMDAwMCIsInRoZW1lX2NvbG9yIjoiIzAwZmZmZiIsImljb25zIjpbeyJzcmMiOiJkYXRhOmltYWdlL3BuZztiYXNlNjQsaVZCT1J3MEtHZ29BQUFBTlNVaEVVZ0FBQUNBQUFBQWdDQVlBQUFCemVucjBBQUFBQkdkQlRVRUFBTEdQQy94aEJRQUFBQ0JqU0ZKTkFBQjZKZ0FBZ0lRQUFQb0FBQUNBK2dBQUFJZ0tBQUE2WitHVEFBQUFGSkVCVmdsV1dPZE5RRkdxamcxZzV5WFhKOGhIOSs2VzNsdjMzaFRKYkdvZz09IiwidHlwZSI6ImltYWdlL3BuZyIsInNpemVzIjoiMzJ4MzIifSx7InNyYyI6ImRhdGE6aW1hZ2UvcG5nO2Jhc2U2NCxpVkJPUncwS0dnb0FBQUFOU1VoRVVnQUFBR0FBQUFCZ0NBWUFBQUJ6ZW5yMEFBQUFCR2RCVFVFQUFMR1BDL3hoQlFBQUFDQmpTRkpOQUFCNkpnQUFnSVFBQVBvQUFBQ0Erg0FBQUlnS0FBQTZaK0dUQUFBQUZKRUJWZ2xXV09kTlFGR3FqZzFnNXlYWEo4aEg5KzZXM2x2MzNoVEpiR29nPT0iLCJ0eXBlIjoiaW1hZ2UvcG5nIiwic2l6ZXMiOiI5Nng5NiJ9LHsic3JjIjoiZGF0YTppbWFnZS9wbmc7YmFzZTY0LGlWQk9SdzBLR2dvQUFBQU5TVWhFVWdBQUFRQUFBQUVBQ0FZQUFBQW16ZW5yMEFBQUFCR2RCVFVFQUFMR1BDL3hoQlFBQUFDQmpTRkpOQUFCNkpnQUFnSVFBQVBvQUFBQ0Erg0FBQUlnS0FBQTZaK0dUQUFBQUZKRUJWZ2xXV09kTlFGR3FqZzFnNXlYWEo4aEg5KzZXM2x2MzNoVEpiR29nPT0iLCJ0eXBlIjoiaW1hZ2UvcG5nIiwic2l6ZXMiOiIyNTZ4MjU2In1dfQ==">
+    <meta name="theme-color" content="#d4af37">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Gunslinger's Breakout">
+</head>
+<body>
+    <div class="scan-lines"></div>
+    
+    <!-- Western Background -->
+    <div class="western-background" id="westernBackground"></div>
+    
+    <div class="game-container">
+        <div class="start-screen" id="startScreen">
+            <h1 class="glow">GUNSLINGER'S BREAKOUT<br><span>WILD WEST SHOWDOWN</span></h1>
+            <div style="margin: 20px 0;">
+                <label for="playerName" style="color: var(--color-brown-primary); font-size: 20px; display: block; margin-bottom: 15px; text-shadow: var(--text-shadow-light); font-family: var(--font-primary); font-weight: bold;">~ NAME OF THE DESPERADO ~</label>
+                <input type="text" id="playerName" maxlength="15" placeholder="OUTLAW">
+            </div>
+            <div class="wanted-poster">
+                <p class="reward">★ REWARD: $1,000,000 DEAD OR ALIVE ★</p>
+                <p class="description">Last seen terrorizing the frontier towns</p>
+                <p class="description">Armed and extremely dangerous</p>
+            </div>
+            <p class="control-instructions">→ Use WASD or ARROW KEYS to aim ←</p>
+            <p class="showdown-prompt pulse lightning">★ PRESS SPACE FOR SHOWDOWN! ★</p>
+            <p class="sheriff-badge">~ Sheriff's Department ~ Dodge City, Kansas ~</p>
+        </div>
+        
+        <div class="game-over hidden" id="gameOver">
+            <h2 id="gameOverTitle">GAME OVER</h2>
+            <p id="finalScore">Final Score: 0</p>
+            <p class="pulse">🤠 Press <strong>SPACE</strong> to saddle up again</p>
+            <p style="color: #888; font-size: 14px; margin-top: 20px;">Press <strong>H</strong> to view high scores</p>
+        </div>
+        
+        <div class="start-screen hidden hall-of-fame" id="highScoresScreen">
+            <h2>🤠 HALL OF FAME 🤠</h2>
+            <div id="highScoresList">
+                <!-- High scores will be populated here -->
+            </div>
+            <p class="back-prompt">Press <strong>SPACE</strong> to mosey on back</p>
+        </div>
+
+        <div class="level-info">
+            <span id="levelValue">LEVEL 1</span> • <span id="multiplierValue">x1</span>
+        </div>
+
+        <div class="combo-display" id="comboDisplay">
+            🔥 COMBO: <span id="comboValue">0</span>
+        </div>
+
+        <div class="powerup-display" id="powerupDisplay">
+        </div>
+
+        <div class="game-ui">
+            <div class="score">Score: <span id="scoreValue">0</span></div>
+            <div class="lives">Lives: <span id="livesValue">3</span></div>
+        </div>
+
+        <canvas id="gameCanvas"></canvas>
+        
+        <button id="installBtn" onclick="installApp()" style="display: none;">🤠 SADDLE UP!</button>
+    </div>
+</body>
+</html>

@@ -1,0 +1,91 @@
+/* Visual effects and special styling */
+.chromatic-aberration {
+  position: relative;
+}
+
+.chromatic-aberration::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: inherit;
+  mix-blend-mode: screen;
+  transform: translate(2px, 0);
+  filter: hue-rotate(90deg);
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+.chromatic-aberration::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: inherit;
+  mix-blend-mode: screen;
+  transform: translate(-2px, 0);
+  filter: hue-rotate(270deg);
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+.neon-border {
+  border: 2px solid #cd853f;
+  box-shadow: 0 0 10px #cd853f, inset 0 0 10px rgba(205, 133, 63, 0.1);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .start-screen,
+  .game-over {
+    min-width: 300px;
+    padding: 30px 40px;
+  }
+  
+  .start-screen h1 {
+    font-size: 32px;
+  }
+  
+  .score,
+  .lives {
+    font-size: 16px;
+    padding: 10px 15px;
+  }
+  
+  .level-info {
+    font-size: 14px;
+    padding: 8px 15px;
+  }
+  
+  .combo-display {
+    font-size: 12px;
+    padding: 8px 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .start-screen,
+  .game-over {
+    min-width: 250px;
+    padding: 20px 30px;
+  }
+  
+  .start-screen h1 {
+    font-size: 24px;
+  }
+  
+  .game-ui {
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  
+  .combo-display {
+    top: 120px;
+    right: 10px;
+  }
+}
