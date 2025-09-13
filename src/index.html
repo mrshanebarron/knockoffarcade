@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>🤠 GUNSLINGER'S BREAKOUT: WILD WEST SHOWDOWN 🔫</title>
     <link rel="manifest" href="data:application/manifest+json;base64,eyJuYW1lIjoiQ3liZXIgQnJlYWtvdXQ6IE5lb24gQW5uaWhpbGF0aW9uIiwic2hvcnRfbmFtZSI6IkN5YmVyIEJyZWFrb3V0IiwiZGVzY3JpcHRpb24iOiJBbiBhZHZhbmNlZCBicmVha291dCBnYW1lIHdpdGggY3liZXJwdW5rIGFlc3RoZXRpY3MgYW5kIGFkdmFuY2VkIGdhbWVwbGF5IG1lY2hhbmljcyIsInN0YXJ0X3VybCI6Ii4vIiwiZGlzcGxheSI6InN0YW5kYWxvbmUiLCJiYWNrZ3JvdW5kX2NvbG9yIjoiIzAwMDAwMCIsInRoZW1lX2NvbG9yIjoiIzAwZmZmZiIsImljb25zIjpbeyJzcmMiOiJkYXRhOmltYWdlL3BuZztiYXNlNjQsaVZCT1J3MEtHZ29BQUFBTlNVaEVVZ0FBQUNBQUFBQWdDQVlBQUFCemVucjBBQUFBQkdkQlRVRUFBTEdQQy94aEJRQUFBQ0JqU0ZKTkFBQjZKZ0FBZ0lRQUFQb0FBQUNBK2dBQUFJZ0tBQUE2WitHVEFBQUFGSkVCVmdsV1dPZE5RRkdxamcxZzV5WFhKOGhIOSs2VzNsdjMzaFRKYkdvZz09IiwidHlwZSI6ImltYWdlL3BuZyIsInNpemVzIjoiMzJ4MzIifSx7InNyYyI6ImRhdGE6aW1hZ2UvcG5nO2Jhc2U2NCxpVkJPUncwS0dnb0FBQUFOU1VoRVVnQUFBR0FBQUFCZ0NBWUFBQUJ6ZW5yMEFBQUFCR2RCVFVFQUFMR1BDL3hoQlFBQUFDQmpTRkpOQUFCNkpnQUFnSVFBQVBvQUFBQ0Erg0FBQUlnS0FBQTZaK0dUQUFBQUZKRUJWZ2xXV09kTlFGR3FqZzFnNXlYWEo4aEg5KzZXM2x2MzNoVEpiR29nPT0iLCJ0eXBlIjoiaW1hZ2UvcG5nIiwic2l6ZXMiOiI5Nng5NiJ9LHsic3JjIjoiZGF0YTppbWFnZS9wbmc7YmFzZTY0LGlWQk9SdzBLR2dvQUFBQU5TVWhFVWdBQUFRQUFBQUVBQ0FZQUFBQW16ZW5yMEFBQUFCR2RCVFVFQUFMR1BDL3hoQlFBQUFDQmpTRkpOQUFCNkpnQUFnSVFBQVBvQUFBQ0Erg0FBQUlnS0FBQTZaK0dUQUFBQUZKRUJWZ2xXV09kTlFGR3FqZzFnNXlYWEo4aEg5KzZXM2x2MzNoVEpiR29nPT0iLCJ0eXBlIjoiaW1hZ2UvcG5nIiwic2l6ZXMiOiIyNTZ4MjU2In1dfQ==">
     <meta name="theme-color" content="#d4af37">
@@ -149,7 +149,21 @@
         </div>
 
         <canvas id="gameCanvas"></canvas>
-        
+
+        <!-- Mobile Controls -->
+        <div class="mobile-controls hidden" id="mobileControls">
+            <div class="mobile-control-panel">
+                <button class="mobile-btn skip-song-btn" id="skipSongBtn">
+                    <span class="btn-icon">⏭️</span>
+                    <span class="btn-label">SKIP SONG</span>
+                </button>
+                <div class="mobile-help">
+                    <p>👆 Touch & drag to move paddle</p>
+                    <p>🎵 Tap to skip songs</p>
+                </div>
+            </div>
+        </div>
+
         <button id="installBtn" onclick="installApp()" style="display: none;">🤠 SADDLE UP!</button>
     </div>
 </body>

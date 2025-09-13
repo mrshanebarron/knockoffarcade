@@ -6,6 +6,10 @@ canvas {
   display: block;
   image-rendering: pixelated;
   cursor: none;
+  touch-action: none; /* Prevent scrolling on touch devices */
+  -webkit-touch-callout: none; /* Disable callout on iOS */
+  -webkit-user-select: none; /* Disable text selection */
+  user-select: none;
 }
 
 /* Hide cursor during gameplay */

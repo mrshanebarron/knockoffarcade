@@ -4,6 +4,7 @@
 
 import { HighScoreManager } from './systems/HighScoreManager.js';
 import { AudioManager } from './systems/AudioManager.js';
+import { GameConfig } from './config/GameConfig.js';
 
 export class KnockoffArcade {
   constructor() {
@@ -71,14 +72,55 @@ export class KnockoffArcade {
   }
 
   resizeCanvas() {
-    this.canvas.width = window.innerWidth;
-    this.canvas.height = window.innerHeight;
-    
-    window.addEventListener('resize', () => {
-      this.canvas.width = window.innerWidth;
-      this.canvas.height = window.innerHeight;
-      this.initializeGame();
-    });
+    // Get viewport dimensions, accounting for mobile specifics
+    let canvasWidth = window.innerWidth;
+    let canvasHeight = window.innerHeight;
+
+    // For mobile devices, use visual viewport if available
+    if (window.visualViewport) {
+      canvasWidth = window.visualViewport.width;
+      canvasHeight = window.visualViewport.height;
+    }
+
+    // Account for mobile browsers hiding/showing address bar
+    if (GameConfig.MOBILE) {
+      // Use screen dimensions on mobile for more stable sizing
+      canvasHeight = Math.min(window.innerHeight, window.screen.height - 100);
+    }
+
+    // Ensure minimum dimensions for playability
+    const minDimension = GameConfig.CANVAS.MIN_DIMENSION || 400;
+    canvasWidth = Math.max(canvasWidth, minDimension);
+    canvasHeight = Math.max(canvasHeight, minDimension);
+
+    this.canvas.width = canvasWidth;
+    this.canvas.height = canvasHeight;
+
+    // Set CSS dimensions to match canvas dimensions for proper scaling
+    this.canvas.style.width = canvasWidth + 'px';
+    this.canvas.style.height = canvasHeight + 'px';
+
+    // Debounced resize handler to avoid excessive recalculations
+    if (!this.resizeTimeout) {
+      window.addEventListener('resize', () => {
+        clearTimeout(this.resizeTimeout);
+        this.resizeTimeout = setTimeout(() => {
+          this.resizeCanvas();
+          this.initializeGame();
+        }, 250);
+      });
+
+      // Handle visual viewport changes on mobile
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', () => {
+          clearTimeout(this.resizeTimeout);
+          this.resizeTimeout = setTimeout(() => {
+            this.resizeCanvas();
+            this.initializeGame();
+          }, 250);
+        });
+      }
+    }
   }
 
   handleResize() {
@@ -230,7 +272,7 @@ export class KnockoffArcade {
         const rect = this.canvas.getBoundingClientRect();
         const mouseX = e.clientX - rect.left;
         this.paddle.x = mouseX - this.paddle.width / 2;
-        
+
         // Keep paddle in bounds
         if (this.paddle.x < 0) this.paddle.x = 0;
         if (this.paddle.x + this.paddle.width > this.canvas.width) {
@@ -239,9 +281,61 @@ export class KnockoffArcade {
       }
     });
 
+    // Touch controls for mobile
+    if (GameConfig.TOUCH_ENABLED) {
+      // Prevent default touch behaviors on canvas
+      this.canvas.addEventListener('touchstart', (e) => e.preventDefault(), { passive: false });
+      this.canvas.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
+      this.canvas.addEventListener('touchend', (e) => e.preventDefault(), { passive: false });
+
+      // Touch move for paddle control
+      this.canvas.addEventListener('touchmove', (e) => {
+        if (this.gameState === 'playing' && e.touches.length > 0) {
+          const rect = this.canvas.getBoundingClientRect();
+          const touch = e.touches[0];
+          const touchX = touch.clientX - rect.left;
+          this.paddle.x = touchX - this.paddle.width / 2;
+
+          // Keep paddle in bounds
+          if (this.paddle.x < 0) this.paddle.x = 0;
+          if (this.paddle.x + this.paddle.width > this.canvas.width) {
+            this.paddle.x = this.canvas.width - this.paddle.width;
+          }
+        }
+      }, { passive: false });
+
+      // Touch tap for starting game and menu interactions
+      this.canvas.addEventListener('touchstart', (e) => {
+        if (this.gameState === 'start' || this.gameState === 'gameOver') {
+          // Touch to start game
+          if (this.gameState === 'start') {
+            this.startGame();
+          } else if (this.gameState === 'gameOver') {
+            this.resetGame();
+            this.startGame();
+          }
+        } else if (this.gameState === 'playing' && e.touches.length > 0) {
+          // Set paddle position on touch start
+          const rect = this.canvas.getBoundingClientRect();
+          const touch = e.touches[0];
+          const touchX = touch.clientX - rect.left;
+          this.paddle.x = touchX - this.paddle.width / 2;
+
+          // Keep paddle in bounds
+          if (this.paddle.x < 0) this.paddle.x = 0;
+          if (this.paddle.x + this.paddle.width > this.canvas.width) {
+            this.paddle.x = this.canvas.width - this.paddle.width;
+          }
+        }
+      }, { passive: false });
+    }
+
     // Also start music on click or input events
     document.addEventListener('click', startMusicOnInteraction);
     document.addEventListener('input', startMusicOnInteraction);
+
+    // Initialize mobile controls
+    this.initializeMobileControls();
   }
 
   startGame() {
@@ -249,6 +343,7 @@ export class KnockoffArcade {
     this.startScreen.classList.add('hidden');
     this.gameOverScreen.classList.add('hidden');
     document.body.classList.add('playing');
+    this.showMobileControls();
     this.start();
   }
 
@@ -586,6 +681,7 @@ export class KnockoffArcade {
   async gameOver() {
     this.gameState = 'gameOver';
     document.body.classList.remove('playing');
+    this.hideMobileControls();
     this.audioManager.playSound('gameOver');
     
     // Check if it's a high score
@@ -974,6 +1070,45 @@ export class KnockoffArcade {
   displayHighScores() {
     if (this.highScoresList) {
       this.highScoresList.innerHTML = this.highScoreManager.generateHighScoresHTML();
+    }
+  }
+
+  initializeMobileControls() {
+    // Get mobile control elements
+    this.mobileControls = document.getElementById('mobileControls');
+    this.skipSongBtn = document.getElementById('skipSongBtn');
+
+    if (!this.mobileControls || !this.skipSongBtn) {
+      console.warn('Mobile control elements not found');
+      return;
+    }
+
+    // Show mobile controls only on mobile devices
+    if (GameConfig.MOBILE) {
+      // Skip song button functionality
+      this.skipSongBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        this.audioManager.playNextTrackManual();
+        this.audioManager.playSound('menuSelect');
+      });
+
+      this.skipSongBtn.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        this.audioManager.playNextTrackManual();
+        this.audioManager.playSound('menuSelect');
+      });
+    }
+  }
+
+  showMobileControls() {
+    if (GameConfig.MOBILE && this.mobileControls) {
+      this.mobileControls.classList.remove('hidden');
+    }
+  }
+
+  hideMobileControls() {
+    if (this.mobileControls) {
+      this.mobileControls.classList.add('hidden');
     }
   }
 

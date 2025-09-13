@@ -36,12 +36,49 @@ body {
   font-family: var(--font-primary);
   color: var(--color-sand);
   overflow: hidden;
+
+  /* Mobile viewport optimizations */
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+
+  /* Prevent rubber band scrolling on iOS */
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
 }
 
 .game-container {
   position: relative;
   width: 100vw;
   height: 100vh;
+
+  /* Handle mobile viewport units better */
+  height: 100dvh; /* Dynamic viewport height */
+  height: 100svh; /* Small viewport height fallback */
+
+  /* Handle safe areas on notched devices */
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+/* Mobile-specific optimizations */
+@media (max-width: 768px) {
+  .game-container {
+    /* Use physical screen height on mobile to avoid address bar issues */
+    height: calc(100vh - env(keyboard-inset-height, 0px));
+    min-height: 100vh;
+  }
+}
+
+/* Handle orientation changes */
+@media (orientation: landscape) and (max-height: 500px) {
+  .game-container {
+    height: 100vh;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
 }
 
 .hidden {
