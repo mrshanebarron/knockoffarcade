@@ -440,6 +440,30 @@
   color: rgba(45, 24, 16, 0.7);
 }
 
+/* Mobile-specific button enhancements */
+@media (max-width: 768px) {
+  .saloon-door-btn {
+    padding: 20px 40px;
+    font-size: 18px;
+    min-height: 70px;
+    -webkit-tap-highlight-color: rgba(218, 165, 32, 0.3);
+  }
+
+  .saloon-door-btn:enabled:active {
+    transform: translateY(1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+  }
+
+  .btn-text {
+    font-size: 22px;
+  }
+
+  .btn-subtext {
+    font-size: 14px;
+    margin-top: 5px;
+  }
+}
+
 /* DESERT FLOOR */
 .desert-floor {
   display: none;

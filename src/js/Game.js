@@ -22,6 +22,7 @@ export class KnockoffArcade {
     this.comboDisplay = document.getElementById('comboDisplay');
     this.powerupDisplay = document.getElementById('powerupDisplay');
     this.playerNameInput = document.getElementById('playerName');
+    this.startButton = document.querySelector('.saloon-door-btn');
     this.highScoresScreen = document.getElementById('highScoresScreen');
     this.highScoresList = document.getElementById('highScoresList');
 
@@ -309,10 +310,23 @@ export class KnockoffArcade {
         if (this.gameState === 'start' || this.gameState === 'gameOver') {
           // Touch to start game
           if (this.gameState === 'start') {
+            const playerName = this.playerNameInput.value.trim();
+            if (playerName.length === 0) {
+              // Shake the input field and play error sound
+              this.playerNameInput.style.border = '3px solid #dc143c';
+              this.playerNameInput.placeholder = 'ENTER YER NAME, PARTNER!';
+              this.audioManager.playSound('ballLost'); // Use error sound
+              setTimeout(() => {
+                this.playerNameInput.style.border = '';
+                this.playerNameInput.placeholder = 'TYPE HERE...';
+              }, 2000);
+              return;
+            }
+            this.audioManager.playSound('menuConfirm');
             this.startGame();
           } else if (this.gameState === 'gameOver') {
+            this.audioManager.playSound('menuConfirm');
             this.resetGame();
-            this.startGame();
           }
         } else if (this.gameState === 'playing' && e.touches.length > 0) {
           // Set paddle position on touch start
@@ -334,8 +348,67 @@ export class KnockoffArcade {
     document.addEventListener('click', startMusicOnInteraction);
     document.addEventListener('input', startMusicOnInteraction);
 
+    // Setup start button functionality
+    this.setupStartButton();
+
     // Initialize mobile controls
     this.initializeMobileControls();
+  }
+
+  setupStartButton() {
+    if (!this.startButton || !this.playerNameInput) {
+      console.warn('Start button or player name input not found');
+      return;
+    }
+
+    // Function to check if button should be enabled
+    const updateButtonState = () => {
+      const playerName = this.playerNameInput.value.trim();
+      if (playerName.length > 0) {
+        this.startButton.disabled = false;
+        this.startButton.classList.remove('disabled');
+        if (GameConfig.MOBILE) {
+          this.startButton.querySelector('.btn-subtext').textContent = 'Touch to enter';
+        } else {
+          this.startButton.querySelector('.btn-subtext').textContent = 'Press SPACE when ready';
+        }
+      } else {
+        this.startButton.disabled = true;
+        this.startButton.classList.add('disabled');
+        this.startButton.querySelector('.btn-subtext').textContent = 'Enter name first';
+      }
+    };
+
+    // Listen for input changes
+    this.playerNameInput.addEventListener('input', updateButtonState);
+    this.playerNameInput.addEventListener('keyup', updateButtonState);
+
+    // Handle button click/touch
+    this.startButton.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (!this.startButton.disabled && this.gameState === 'start') {
+        const playerName = this.playerNameInput.value.trim();
+        if (playerName.length > 0) {
+          this.audioManager.playSound('menuConfirm');
+          this.startGame();
+        }
+      }
+    });
+
+    // Handle touch events for mobile
+    this.startButton.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      if (!this.startButton.disabled && this.gameState === 'start') {
+        const playerName = this.playerNameInput.value.trim();
+        if (playerName.length > 0) {
+          this.audioManager.playSound('menuConfirm');
+          this.startGame();
+        }
+      }
+    });
+
+    // Initial button state
+    updateButtonState();
   }
 
   startGame() {
