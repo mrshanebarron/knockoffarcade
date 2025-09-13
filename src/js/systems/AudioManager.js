@@ -861,6 +861,9 @@ export class AudioManager {
     if (!this.isInitialized || this.isMuted || !this.currentMusic) return;
 
     try {
+      // CRITICAL: Stop any currently playing music to prevent overlapping
+      this.stopCurrentMusic();
+
       // Ensure audio context is resumed (required by modern browsers)
       await this.resumeContext();
 
@@ -1673,6 +1676,7 @@ export class AudioManager {
     // Stop the actual audio source if it exists
     if (this.currentMusicSource) {
       try {
+        console.log('Stopping current music to prevent overlap');
         this.currentMusicSource.stop();
       } catch (e) {
         // Audio source might already be stopped
