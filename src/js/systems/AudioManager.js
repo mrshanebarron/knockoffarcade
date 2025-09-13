@@ -9,7 +9,9 @@ export class AudioManager {
     this.context = null;
     this.masterVolume = 0.7;
     this.sfxVolume = 0.8;
-    this.musicVolume = 0.4;
+    this.musicVolume = 0.3;
+    this.musicVolumeReduced = 0.01;
+    this.voiceVolume = 1.5;
     this.isInitialized = false;
     this.isMuted = false;
     this.userHasInteracted = false;
@@ -837,6 +839,9 @@ export class AudioManager {
       ];
       this.currentTrackIndex = 0;
     }
+
+    // Stop any currently playing music to prevent overlapping
+    this.stopCurrentMusic();
 
     // Set current music to audio files only - NO SYNTHESIZED MUSIC!
     this.currentMusic = { melody: 'audio_files', type: 'background', startTime: this.context.currentTime };
@@ -1770,6 +1775,121 @@ export class AudioManager {
       this.mute();
     }
     return !this.isMuted;
+  }
+
+  /**
+   * Play a voice audio file (separate from background music)
+   * @param {string} voiceFile - Path to the voice audio file
+   * @param {number} volume - Volume level (0-1)
+   * @param {number} delay - Delay in seconds before playing
+   * @returns {Promise} Resolves when voice starts playing
+   */
+  async playVoiceAudio(voiceFile, volume = 0.8, delay = 0) {
+    // Initialize audio if needed
+    if (!this.isInitialized) {
+      await this.initializeAudio();
+    }
+
+    if (!this.isInitialized || !this.context) {
+      console.warn('Audio context not initialized for voice playback');
+      return;
+    }
+
+    // Don't play if muted
+    if (this.isMuted) {
+      console.log('Voice audio skipped - audio is muted');
+      return;
+    }
+
+    try {
+      await this.resumeContext();
+
+      // Fetch and decode the voice audio file
+      const response = await fetch(voiceFile);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch voice file ${voiceFile}: ${response.status}`);
+      }
+
+      const arrayBuffer = await response.arrayBuffer();
+      const audioBuffer = await this.context.decodeAudioData(arrayBuffer);
+
+      console.log(`Voice loaded: ${voiceFile}, duration: ${audioBuffer.duration}s`);
+
+      // Create source for voice audio
+      const source = this.context.createBufferSource();
+      source.buffer = audioBuffer;
+
+      // Create a separate gain node for voice (independent of music)
+      const voiceGain = this.context.createGain();
+      voiceGain.gain.value = volume * this.voiceVolume * this.masterVolume;
+
+      // Connect voice directly to master gain (parallel to music)
+      source.connect(voiceGain);
+      voiceGain.connect(this.masterGain);
+
+      // Reduce music volume during voice playback
+      this.reduceMusicVolume();
+
+      // Start playing after delay
+      const startTime = this.context.currentTime + delay;
+      source.start(startTime);
+
+      // Store reference for potential stopping
+      this.currentVoiceSource = source;
+
+      // Restore music volume when voice ends
+      const voiceDuration = audioBuffer.duration;
+      setTimeout(() => {
+        this.restoreMusicVolume();
+        this.currentVoiceSource = null;
+      }, (delay + voiceDuration) * 1000);
+
+      // Clear reference when done
+      source.onended = () => {
+        this.currentVoiceSource = null;
+        console.log('Voice audio finished playing');
+      };
+
+      console.log(`Voice audio "${voiceFile}" scheduled to play in ${delay} seconds`);
+
+    } catch (error) {
+      console.error('Error playing voice audio:', error);
+    }
+  }
+
+  /**
+   * Stop current voice audio if playing
+   */
+  stopVoiceAudio() {
+    if (this.currentVoiceSource) {
+      try {
+        this.currentVoiceSource.stop();
+        this.currentVoiceSource = null;
+        console.log('Voice audio stopped');
+      } catch (error) {
+        // Source may have already stopped
+      }
+    }
+  }
+
+  /**
+   * Temporarily reduce music volume for voice playback
+   */
+  reduceMusicVolume() {
+    if (this.musicGain) {
+      this.musicGain.gain.setValueAtTime(this.musicVolumeReduced * this.masterVolume, this.context.currentTime);
+      console.log('Music volume reduced for voice playback');
+    }
+  }
+
+  /**
+   * Restore music volume after voice playback
+   */
+  restoreMusicVolume() {
+    if (this.musicGain) {
+      this.musicGain.gain.setValueAtTime(this.musicVolume * this.masterVolume, this.context.currentTime);
+      console.log('Music volume restored after voice playback');
+    }
   }
 }
 

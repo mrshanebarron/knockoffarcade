@@ -207,6 +207,17 @@ export class KnockoffArcade {
         this.musicStarted = true;
         await this.audioManager.startBackgroundMusic();
         console.log('Background music started');
+
+        // Play voice audio if on start screen
+        if (this.gameState === 'start') {
+          try {
+            console.log('Attempting to play voice audio...');
+            await this.audioManager.playVoiceAudio('./assets/sounds/voices/stateyourname.wav', 1.0, 1.0);
+            console.log('Voice audio started successfully');
+          } catch (error) {
+            console.error('Failed to play voice audio:', error);
+          }
+        }
       }
     };
 
@@ -384,8 +395,9 @@ export class KnockoffArcade {
     this.playerNameInput.addEventListener('keyup', updateButtonState);
 
     // Handle button click/touch
-    this.startButton.addEventListener('click', (e) => {
+    this.startButton.addEventListener('click', async (e) => {
       e.preventDefault();
+      await startMusicOnInteraction();
       if (!this.startButton.disabled && this.gameState === 'start') {
         const playerName = this.playerNameInput.value.trim();
         if (playerName.length > 0) {
@@ -396,8 +408,9 @@ export class KnockoffArcade {
     });
 
     // Handle touch events for mobile
-    this.startButton.addEventListener('touchstart', (e) => {
+    this.startButton.addEventListener('touchstart', async (e) => {
       e.preventDefault();
+      await startMusicOnInteraction();
       if (!this.startButton.disabled && this.gameState === 'start') {
         const playerName = this.playerNameInput.value.trim();
         if (playerName.length > 0) {
