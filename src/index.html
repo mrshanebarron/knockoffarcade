@@ -11,33 +11,117 @@
     <meta name="apple-mobile-web-app-title" content="Gunslinger's Breakout">
 </head>
 <body>
-    <div class="scan-lines"></div>
-    
-    <!-- Western Background -->
-    <div class="western-background" id="westernBackground"></div>
     
     <div class="game-container">
         <div class="start-screen" id="startScreen">
-            <h1 class="glow">GUNSLINGER'S BREAKOUT<br><span>WILD WEST SHOWDOWN</span></h1>
-            <div style="margin: 20px 0;">
-                <label for="playerName" style="color: var(--color-brown-primary); font-size: 20px; display: block; margin-bottom: 15px; text-shadow: var(--text-shadow-light); font-family: var(--font-primary); font-weight: bold;">~ NAME OF THE DESPERADO ~</label>
-                <input type="text" id="playerName" maxlength="15" placeholder="OUTLAW">
+            <!-- Desert Sky Background -->
+            <div class="desert-sky">
+                <div class="sun">☀️</div>
+                <div class="clouds">
+                    <div class="cloud cloud1">☁️</div>
+                    <div class="cloud cloud2">☁️</div>
+                </div>
             </div>
-            <div class="wanted-poster">
-                <p class="reward">★ REWARD: $1,000,000 DEAD OR ALIVE ★</p>
-                <p class="description">Last seen terrorizing the frontier towns</p>
-                <p class="description">Armed and extremely dangerous</p>
+
+            <!-- Mountain Range -->
+            <div class="mountain-range">
+                <div class="mountain mountain1"></div>
+                <div class="mountain mountain2"></div>
+                <div class="mountain mountain3"></div>
             </div>
-            <p class="control-instructions">→ Use WASD or ARROW KEYS to aim ←</p>
-            <p class="showdown-prompt pulse lightning">★ PRESS SPACE FOR SHOWDOWN! ★</p>
-            <p class="sheriff-badge">~ Sheriff's Department ~ Dodge City, Kansas ~</p>
+
+            <!-- Main Saloon Building -->
+            <div class="saloon-building">
+                <div class="saloon-roof">
+                    <div class="roof-left"></div>
+                    <div class="roof-center"></div>
+                    <div class="roof-right"></div>
+                </div>
+
+                <div class="saloon-facade">
+                    <div class="saloon-sign-main">
+                        <div class="sign-rope left-rope"></div>
+                        <div class="hanging-sign">
+                            <div class="sign-content">
+                                <h1 class="title-line1">KNOCKOFF</h1>
+                                <h2 class="title-line2">ARCADE</h2>
+                                <div class="subtitle">EST. 1875</div>
+                            </div>
+                        </div>
+                        <div class="sign-rope right-rope"></div>
+                    </div>
+
+                    <!-- Saloon Doors -->
+                    <div class="saloon-doors">
+                        <div class="door door-left">
+                            <div class="door-panel"></div>
+                        </div>
+                        <div class="door door-right">
+                            <div class="door-panel"></div>
+                        </div>
+                    </div>
+
+                    <!-- Windows -->
+                    <div class="window window-left">
+                        <div class="window-frame"></div>
+                    </div>
+                    <div class="window window-right">
+                        <div class="window-frame"></div>
+                    </div>
+
+                    <!-- Sheriff Badge -->
+                    <div class="sheriff-badge">
+                        <div class="badge-star">★</div>
+                        <div class="badge-text">SHERIFF</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Registration Desk -->
+            <div class="registration-desk">
+                <div class="desk-surface">
+                    <div class="desk-sign">
+                        <div class="sign-header">REGISTRATION REQUIRED</div>
+                        <div class="sign-subtext">State yer name, stranger</div>
+                    </div>
+
+                    <div class="name-input-area">
+                        <label for="playerName" class="input-label">Outlaw Name:</label>
+                        <input type="text" id="playerName" maxlength="15" placeholder="TYPE HERE..." class="cowboy-input" autocomplete="off">
+                        <div class="input-warning">⚠️ Name required to enter saloon! ⚠️</div>
+                    </div>
+
+                    <div class="start-button-area">
+                        <button class="saloon-door-btn" disabled>
+                            <div class="btn-text">ENTER SALOON</div>
+                            <div class="btn-subtext">Press SPACE when ready</div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Desert Floor -->
+            <div class="desert-floor">
+                <div class="tumbleweed tumbleweed1">🌾</div>
+                <div class="tumbleweed tumbleweed2">🌿</div>
+                <div class="dust-cloud dust1"></div>
+                <div class="dust-cloud dust2"></div>
+            </div>
+
+            <!-- Help Text -->
+            <div class="help-overlay">
+                <div class="help-text">
+                    <p>🎯 Use ARROW KEYS or WASD to aim</p>
+                    <p>🔫 SPACE to shoot • H for Hall of Fame • M to Mute</p>
+                </div>
+            </div>
         </div>
         
         <div class="game-over hidden" id="gameOver">
             <h2 id="gameOverTitle">GAME OVER</h2>
             <p id="finalScore">Final Score: 0</p>
             <p class="pulse">🤠 Press <strong>SPACE</strong> to saddle up again</p>
-            <p style="color: #888; font-size: 14px; margin-top: 20px;">Press <strong>H</strong> to view high scores</p>
+            <p style="color: #888; font-size: 14px; margin-top: 20px;">Press <strong>H</strong> to view high scores • Press <strong>M</strong> to mute/unmute</p>
         </div>
         
         <div class="start-screen hidden hall-of-fame" id="highScoresScreen">

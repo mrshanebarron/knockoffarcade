@@ -1,10 +1,11 @@
 /**
- * Complete SuperBreakout Game - Working Version
+ * Complete KnockoffArcade Game - Working Version
  */
 
 import { HighScoreManager } from './systems/HighScoreManager.js';
+import { AudioManager } from './systems/AudioManager.js';
 
-export class SuperBreakout {
+export class KnockoffArcade {
   constructor() {
     this.canvas = document.getElementById('gameCanvas');
     this.ctx = this.canvas.getContext('2d');
@@ -33,11 +34,30 @@ export class SuperBreakout {
     this.bricks = [];
     this.powerUps = [];
     this.particles = [];
+    this.cavityBalls = new Set(); // Track balls in the cavity (above bricks)
+    this.cavityTimers = new Map(); // Track cavity effect timers for balls
+    this.originalSpeeds = new Map(); // Track original speeds for cavity balls
     this.keys = {};
 
     // Initialize high score manager
     this.highScoreManager = new HighScoreManager();
     this.displayHighScores();
+
+    // Initialize audio manager and start music after first user interaction
+    this.audioManager = new AudioManager();
+    this.musicStarted = false;
+
+    // Load background image
+    this.backgroundImage = new Image();
+    this.backgroundImage.src = './assets/img/background.webp';
+
+    // Load power-up icons
+    this.powerUpIcons = {};
+    this.loadPowerUpIcons();
+    this.backgroundImageLoaded = false;
+    this.backgroundImage.onload = () => {
+      this.backgroundImageLoaded = true;
+    };
 
     this.resizeCanvas();
     this.initializeGame();
@@ -114,28 +134,88 @@ export class SuperBreakout {
     }
   }
 
+  loadPowerUpIcons() {
+    const iconPath = './assets/images/powerups/';
+    const iconMappings = {
+      'dynamite': 'cactus.svg',          // Multi-ball power-up
+      'sheriff_badge': 'badge.svg',       // Destructive power-up
+      'horseshoe': 'hat.svg',            // Slow-motion power-up
+      'boots': 'boot-and-spur.svg',      // Maximum speed boost power-up (boot-with-spur as requested)
+      'whiskey': 'whiskybottle.svg'      // Paddle width increase power-up
+    };
+
+    for (const [powerUpType, iconFile] of Object.entries(iconMappings)) {
+      const img = new Image();
+      img.src = iconPath + iconFile;
+      this.powerUpIcons[powerUpType] = img;
+    }
+  }
+
+
   getBrickColor(row) {
     const colors = ['#dc143c', '#ff6600', '#ffd700', '#00ff7f', '#00ffff', '#8a2be2', '#ff69b4', '#deb887'];
     return colors[row % colors.length];
   }
 
   setupEventListeners() {
+    // Start music on any user interaction
+    const startMusicOnInteraction = async () => {
+      if (!this.musicStarted) {
+        this.musicStarted = true;
+        await this.audioManager.startBackgroundMusic();
+        console.log('Background music started');
+      }
+    };
+
     document.addEventListener('keydown', (e) => {
       this.keys[e.code] = true;
+      startMusicOnInteraction();
       
       if (e.code === 'Space') {
         e.preventDefault();
         if (this.gameState === 'start') {
+          const playerName = this.playerNameInput.value.trim();
+          if (playerName.length === 0) {
+            // Shake the input field and play error sound
+            this.playerNameInput.style.border = '3px solid #dc143c';
+            this.playerNameInput.placeholder = 'ENTER YER NAME, PARTNER!';
+            this.audioManager.playSound('ballLost'); // Use error sound
+            setTimeout(() => {
+              this.playerNameInput.style.border = '';
+              this.playerNameInput.placeholder = 'ENTER YER NAME';
+            }, 2000);
+            return;
+          }
+          this.audioManager.playSound('menuConfirm');
           this.startGame();
         } else if (this.gameState === 'gameOver') {
+          this.audioManager.playSound('menuConfirm');
           this.resetGame();
         } else if (this.gameState === 'highScores') {
+          this.audioManager.playSound('menuSelect');
           this.hideHighScores();
         }
       } else if (e.code === 'KeyH') {
-        e.preventDefault();
-        if (this.gameState === 'gameOver' || this.gameState === 'start') {
-          this.showHighScores();
+        // Don't intercept if input is focused
+        if (document.activeElement !== this.playerNameInput) {
+          e.preventDefault();
+          if (this.gameState === 'gameOver' || this.gameState === 'start') {
+            this.audioManager.playSound('menuSelect');
+            this.showHighScores();
+          }
+        }
+      } else if (e.code === 'KeyM') {
+        // Don't intercept if input is focused
+        if (document.activeElement !== this.playerNameInput) {
+          e.preventDefault();
+          this.audioManager.toggleMute();
+        }
+      } else if (e.code === 'KeyS') {
+        // Don't intercept if input is focused
+        if (document.activeElement !== this.playerNameInput) {
+          e.preventDefault();
+          this.audioManager.playNextTrackManual();
+          this.audioManager.playSound('menuSelect'); // Play Western sound effect
         }
       }
     });
@@ -158,6 +238,10 @@ export class SuperBreakout {
         }
       }
     });
+
+    // Also start music on click or input events
+    document.addEventListener('click', startMusicOnInteraction);
+    document.addEventListener('input', startMusicOnInteraction);
   }
 
   startGame() {
@@ -184,6 +268,7 @@ export class SuperBreakout {
   start() {
     this.gameStarted = true;
     this.lastTime = performance.now();
+    // Music is already started on user interaction
   }
 
   pause() {
@@ -244,11 +329,55 @@ export class SuperBreakout {
   updateBalls() {
     for (let i = this.balls.length - 1; i >= 0; i--) {
       const ball = this.balls[i];
-      
+
       // Update position
       ball.x += ball.speedX;
       ball.y += ball.speedY;
-      
+
+      // Check if ball is in cavity (above top row of bricks)
+      const topBrickY = 80; // Where bricks start
+      const wasInCavity = this.cavityBalls.has(ball);
+      const isInCavity = ball.y < topBrickY;
+
+      if (isInCavity && !wasInCavity) {
+        // Ball just entered cavity!
+        this.cavityBalls.add(ball);
+        this.score += 50; // Cavity entry bonus
+        this.createParticles(ball.x, ball.y, '#ffd700', 8); // Gold particles
+
+        // Store original speed and increase ball speed (SuperBreakout style!)
+        this.originalSpeeds.set(ball, {
+          speedX: ball.speedX,
+          speedY: ball.speedY
+        });
+        ball.speedX *= 1.8; // 80% speed increase
+        ball.speedY *= 1.8;
+        console.log('Ball entered cavity! Speed increased and bonus points awarded.');
+      } else if (!isInCavity && wasInCavity) {
+        // Ball left cavity - start golden effect timer
+        this.cavityBalls.delete(ball);
+        this.cavityTimers.set(ball, Date.now() + 5000); // Golden effect lasts 5 seconds after leaving cavity
+        console.log('Ball left cavity - golden effect continues for 5 seconds');
+      }
+
+      // Check if cavity timer has expired
+      if (this.cavityTimers.has(ball)) {
+        if (Date.now() > this.cavityTimers.get(ball)) {
+          this.cavityTimers.delete(ball);
+
+          // Restore original speed when cavity effect expires
+          if (this.originalSpeeds.has(ball)) {
+            const originalSpeed = this.originalSpeeds.get(ball);
+            ball.speedX = originalSpeed.speedX;
+            ball.speedY = originalSpeed.speedY;
+            this.originalSpeeds.delete(ball);
+            console.log('Golden cavity effect expired - speed restored to normal');
+          } else {
+            console.log('Golden cavity effect expired for ball');
+          }
+        }
+      }
+
       // Wall collisions
       if (ball.x <= ball.radius || ball.x >= this.canvas.width - ball.radius) {
         ball.speedX = -ball.speedX;
@@ -256,11 +385,15 @@ export class SuperBreakout {
       if (ball.y <= ball.radius) {
         ball.speedY = -ball.speedY;
       }
-      
+
       // Bottom boundary - lose ball
       if (ball.y >= this.canvas.height - ball.radius) {
         this.balls.splice(i, 1);
+        this.cavityBalls.delete(ball); // Remove from cavity tracking
+        this.cavityTimers.delete(ball); // Remove cavity timer
+        this.originalSpeeds.delete(ball); // Remove speed tracking
         this.createParticles(ball.x, ball.y, '#ff0000', 10);
+        this.audioManager.playSound('ballLost');
       }
     }
     
@@ -296,6 +429,7 @@ export class SuperBreakout {
         this.powerUps.splice(i, 1);
         this.createParticles(powerUp.x, powerUp.y, powerUp.color, 15);
         this.score += 250;
+        this.audioManager.playSound('powerUpCollect');
       }
     }
   }
@@ -325,6 +459,7 @@ export class SuperBreakout {
         const hitPos = (ball.x - (this.paddle.x + this.paddle.width / 2)) / (this.paddle.width / 2);
         ball.speedX = hitPos * 5;
         ball.speedY = -Math.abs(ball.speedY);
+        this.audioManager.playSound('paddleHit');
       }
       
       // Brick collisions
@@ -346,8 +481,8 @@ export class SuperBreakout {
   hitBrick(brick, ball) {
     const bricksHit = [];
     
-    // Check if ball has spike power-up
-    const hasSpike = ball.powerUps.spike;
+    // Check if ball has spike power-up (and it hasn't expired)
+    const hasSpike = ball.powerUps.spike && ball.powerUps.spike > Date.now();
     
     if (hasSpike) {
       // Find up to 3 bricks in the direction of ball movement
@@ -373,14 +508,27 @@ export class SuperBreakout {
     // Process all hit bricks
     bricksHit.forEach(hitBrick => {
       hitBrick.visible = false;
-      this.score += 100 * this.multiplier;
+
+      // Add score with cavity bonus
+      let points = 100 * this.multiplier;
+      const ballInCavity = this.cavityBalls.has(ball) || this.cavityTimers.has(ball);
+      if (ballInCavity) {
+        points *= 2; // Double points for cavity shots!
+        console.log('Cavity shot! Double points!');
+      }
+      this.score += points;
+
       this.combo++;
+      this.audioManager.playBrickBreak();
+      this.audioManager.playComboSound(this.combo);
       
-      // Create particles
-      this.createParticles(hitBrick.x + hitBrick.width / 2, hitBrick.y + hitBrick.height / 2, hitBrick.color, hasSpike ? 15 : 10);
+      // Create particles (extra for cavity shots)
+      const particleCount = hasSpike ? 15 : (ballInCavity ? 15 : 10);
+      const particleColor = ballInCavity ? '#ffd700' : hitBrick.color; // Gold for cavity shots
+      this.createParticles(hitBrick.x + hitBrick.width / 2, hitBrick.y + hitBrick.height / 2, particleColor, particleCount);
       
-      // Random power-up drop (only from first brick)
-      if (hitBrick === brick && Math.random() < 0.3) {
+      // Random power-up drop (only from first brick) - reduced spawn rate and limit total powerups
+      if (hitBrick === brick && Math.random() < 0.08 && this.powerUps.length < 2) {
         this.createPowerUp(hitBrick.x + hitBrick.width / 2, hitBrick.y + hitBrick.height / 2);
       }
     });
@@ -410,6 +558,7 @@ export class SuperBreakout {
     
     const levelBonus = this.level * 1000;
     this.score += levelBonus;
+    this.audioManager.playSound('levelComplete');
     
     this.createBricks();
     this.resetBall();
@@ -421,12 +570,23 @@ export class SuperBreakout {
     this.ball.y = this.canvas.height / 2;
     this.ball.speedX = (Math.random() > 0.5 ? 1 : -1) * 2 * scale;
     this.ball.speedY = -2 * scale;
+
+    // Reset ball power-ups
+    this.ball.powerUps = {};
+
+    // Reset paddle power-ups
+    this.paddle.powerUps = {};
+
+    // Reset paddle size to normal if it was widened
+    this.paddle.width = 120 * scale;
+
     this.balls = [this.ball];
   }
 
   async gameOver() {
     this.gameState = 'gameOver';
     document.body.classList.remove('playing');
+    this.audioManager.playSound('gameOver');
     
     // Check if it's a high score
     if (this.highScoreManager.isHighScore(this.score)) {
@@ -463,15 +623,15 @@ export class SuperBreakout {
   }
 
   createPowerUp(x, y) {
-    const types = ['multi', 'wide', 'fast', 'slow', 'spike'];
-    const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff6600'];
+    const types = ['dynamite', 'whiskey', 'horseshoe', 'boots', 'sheriff_badge'];
+    const colors = ['#8b4513', '#d2691e', '#c0c0c0', '#654321', '#ffd700'];
     const typeIndex = Math.floor(Math.random() * types.length);
     
     this.powerUps.push({
-      x: x - 10,
+      x: x - 30, // Adjusted for larger powerup (half of 60)
       y: y,
-      width: 20,
-      height: 20,
+      width: 60,  // 3 times larger (was 20), 1:1 aspect ratio
+      height: 60, // 3 times larger (was 20), 1:1 aspect ratio
       type: types[typeIndex],
       color: colors[typeIndex]
     });
@@ -479,7 +639,8 @@ export class SuperBreakout {
 
   applyPowerUp(type) {
     switch (type) {
-      case 'multi':
+      case 'dynamite':
+        // Multi-ball explosion
         if (this.balls.length < 5) {
           const newBall = { ...this.ball };
           newBall.speedX = -newBall.speedX;
@@ -488,21 +649,26 @@ export class SuperBreakout {
           this.balls.push(newBall);
         }
         break;
-      case 'wide':
+      case 'whiskey':
+        // Makes paddle wider (liquid courage)
         this.paddle.width *= 1.5;
         break;
-      case 'fast':
+      case 'boots':
+        // Speed boost (faster movement)
         this.balls.forEach(ball => {
           ball.speedX *= 1.5;
           ball.speedY *= 1.5;
         });
         break;
-      case 'spike':
+      case 'sheriff_badge':
+        // Gives ball destructive power (like spike)
         this.balls.forEach(ball => {
-          ball.powerUps.spike = true; // Permanent spike power
+          ball.powerUps.spike = Date.now() + 10000; // 10 second timeout
         });
+        this.audioManager.startSpikeMusic();
         break;
-      case 'slow':
+      case 'horseshoe':
+        // Lucky charm - slows things down
         this.balls.forEach(ball => {
           ball.speedX *= 0.5;
           ball.speedY *= 0.5;
@@ -523,16 +689,19 @@ export class SuperBreakout {
     // Clear canvas
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-    // Draw bricks
+    // Draw background image if loaded
+    if (this.backgroundImageLoaded) {
+      this.ctx.drawImage(this.backgroundImage, 0, 0, this.canvas.width, this.canvas.height);
+    } else {
+      // Fallback solid color background
+      this.ctx.fillStyle = '#2d1810';
+      this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    }
+
+    // Draw bricks (rough cut wood style)
     for (let brick of this.bricks) {
       if (brick.visible) {
-        this.ctx.fillStyle = brick.color;
-        this.ctx.fillRect(brick.x, brick.y, brick.width, brick.height);
-        
-        // Add border
-        this.ctx.strokeStyle = '#333';
-        this.ctx.lineWidth = 1;
-        this.ctx.strokeRect(brick.x, brick.y, brick.width, brick.height);
+        this.drawWoodBrick(brick);
       }
     }
 
@@ -550,7 +719,7 @@ export class SuperBreakout {
 
     // Draw balls
     for (let ball of this.balls) {
-      const hasSpike = ball.powerUps.spike;
+      const hasSpike = ball.powerUps.spike && ball.powerUps.spike > Date.now();
       
       if (hasSpike) {
         // Draw spiked ball
@@ -585,180 +754,63 @@ export class SuperBreakout {
         this.ctx.arc(ball.x, ball.y, ball.radius * 0.6, 0, Math.PI * 2);
         this.ctx.fill();
       } else {
-        // Draw normal ball
-        const ballGradient = this.ctx.createRadialGradient(
-          ball.x - ball.radius * 0.3, ball.y - ball.radius * 0.3, 0,
-          ball.x, ball.y, ball.radius
-        );
-        ballGradient.addColorStop(0, '#c0c0c0');
-        ballGradient.addColorStop(0.4, '#808080');
-        ballGradient.addColorStop(1, '#404040');
-        
-        this.ctx.fillStyle = ballGradient;
+        // Check if ball is in cavity or has active cavity timer for special glow effect
+        const inCavity = this.cavityBalls.has(ball) || this.cavityTimers.has(ball);
+
+        if (inCavity) {
+          // Draw golden glow for cavity balls
+          this.ctx.shadowBlur = 15;
+          this.ctx.shadowColor = '#ffd700';
+
+          const cavityGradient = this.ctx.createRadialGradient(
+            ball.x - ball.radius * 0.3, ball.y - ball.radius * 0.3, 0,
+            ball.x, ball.y, ball.radius
+          );
+          cavityGradient.addColorStop(0, '#fff700');
+          cavityGradient.addColorStop(0.4, '#ffd700');
+          cavityGradient.addColorStop(1, '#cc9900');
+
+          this.ctx.fillStyle = cavityGradient;
+        } else {
+          // Draw normal ball
+          const ballGradient = this.ctx.createRadialGradient(
+            ball.x - ball.radius * 0.3, ball.y - ball.radius * 0.3, 0,
+            ball.x, ball.y, ball.radius
+          );
+          ballGradient.addColorStop(0, '#c0c0c0');
+          ballGradient.addColorStop(0.4, '#808080');
+          ballGradient.addColorStop(1, '#404040');
+
+          this.ctx.fillStyle = ballGradient;
+        }
+
         this.ctx.beginPath();
         this.ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
         this.ctx.fill();
+
+        // Clear shadow effect
+        this.ctx.shadowBlur = 0;
+        this.ctx.shadowColor = 'transparent';
       }
     }
 
-    // Draw power-ups
+    // Draw power-ups using Western icons
     for (let powerUp of this.powerUps) {
-      const centerX = powerUp.x + powerUp.width / 2;
-      const centerY = powerUp.y + powerUp.height / 2;
-      const radius = powerUp.width / 2;
-      
       this.ctx.save();
-      
-      switch (powerUp.type) {
-        case 'spike':
-          // Draw spike power-up with spiky edges
-          this.ctx.fillStyle = powerUp.color;
-          this.ctx.beginPath();
-          const spikes = 6;
-          
-          for (let i = 0; i < spikes * 2; i++) {
-            const angle = (i * Math.PI) / spikes;
-            const r = i % 2 === 0 ? radius : radius * 0.6;
-            const x = centerX + Math.cos(angle) * r;
-            const y = centerY + Math.sin(angle) * r;
-            
-            if (i === 0) {
-              this.ctx.moveTo(x, y);
-            } else {
-              this.ctx.lineTo(x, y);
-            }
-          }
-          this.ctx.closePath();
-          this.ctx.fill();
-          
-          // Add lightning symbol
-          this.ctx.fillStyle = '#fff';
-          this.ctx.font = '10px Arial';
-          this.ctx.textAlign = 'center';
-          this.ctx.fillText('⚡', centerX, centerY + 3);
-          break;
-          
-        case 'multi':
-          // Draw multi-ball power-up as overlapping circles
-          this.ctx.fillStyle = powerUp.color;
-          
-          // Main circle
-          this.ctx.beginPath();
-          this.ctx.arc(centerX, centerY, radius * 0.8, 0, Math.PI * 2);
-          this.ctx.fill();
-          
-          // Smaller overlapping circles
-          this.ctx.fillStyle = '#ff6666';
-          this.ctx.beginPath();
-          this.ctx.arc(centerX - 3, centerY - 3, radius * 0.5, 0, Math.PI * 2);
-          this.ctx.fill();
-          
-          this.ctx.beginPath();
-          this.ctx.arc(centerX + 3, centerY - 3, radius * 0.5, 0, Math.PI * 2);
-          this.ctx.fill();
-          
-          this.ctx.beginPath();
-          this.ctx.arc(centerX, centerY + 4, radius * 0.5, 0, Math.PI * 2);
-          this.ctx.fill();
-          break;
-          
-        case 'wide':
-          // Draw wide paddle power-up as expanding bars
-          this.ctx.fillStyle = powerUp.color;
-          
-          // Center bar
-          this.ctx.fillRect(centerX - 8, centerY - 2, 16, 4);
-          
-          // Expanding bars
-          this.ctx.fillStyle = '#66ff66';
-          this.ctx.fillRect(centerX - 6, centerY - 4, 12, 2);
-          this.ctx.fillRect(centerX - 4, centerY - 6, 8, 2);
-          this.ctx.fillRect(centerX - 6, centerY + 2, 12, 2);
-          this.ctx.fillRect(centerX - 4, centerY + 4, 8, 2);
-          
-          // Arrow symbols
-          this.ctx.fillStyle = '#fff';
-          this.ctx.font = '8px Arial';
-          this.ctx.textAlign = 'center';
-          this.ctx.fillText('←→', centerX, centerY + 2);
-          break;
-          
-        case 'fast':
-          // Draw speed power-up with motion lines
-          this.ctx.fillStyle = powerUp.color;
-          
-          // Main diamond shape
-          this.ctx.beginPath();
-          this.ctx.moveTo(centerX, centerY - radius);
-          this.ctx.lineTo(centerX + radius, centerY);
-          this.ctx.lineTo(centerX, centerY + radius);
-          this.ctx.lineTo(centerX - radius, centerY);
-          this.ctx.closePath();
-          this.ctx.fill();
-          
-          // Motion lines
-          this.ctx.strokeStyle = '#ffff66';
-          this.ctx.lineWidth = 2;
-          this.ctx.beginPath();
-          for (let i = 0; i < 3; i++) {
-            const offset = -radius - 3 - (i * 2);
-            this.ctx.moveTo(centerX + offset, centerY - 3);
-            this.ctx.lineTo(centerX + offset + 4, centerY - 3);
-            this.ctx.moveTo(centerX + offset, centerY + 3);
-            this.ctx.lineTo(centerX + offset + 4, centerY + 3);
-          }
-          this.ctx.stroke();
-          
-          // Speed symbol
-          this.ctx.fillStyle = '#fff';
-          this.ctx.font = '8px Arial';
-          this.ctx.textAlign = 'center';
-          this.ctx.fillText('⚡', centerX, centerY + 2);
-          break;
-          
-        case 'slow':
-          // Draw slow power-up with clock-like design
-          this.ctx.fillStyle = powerUp.color;
-          
-          // Main circle
-          this.ctx.beginPath();
-          this.ctx.arc(centerX, centerY, radius * 0.9, 0, Math.PI * 2);
-          this.ctx.fill();
-          
-          // Clock marks
-          this.ctx.strokeStyle = '#fff';
-          this.ctx.lineWidth = 1;
-          for (let i = 0; i < 12; i++) {
-            const angle = (i * Math.PI * 2) / 12;
-            const startX = centerX + Math.cos(angle) * radius * 0.7;
-            const startY = centerY + Math.sin(angle) * radius * 0.7;
-            const endX = centerX + Math.cos(angle) * radius * 0.5;
-            const endY = centerY + Math.sin(angle) * radius * 0.5;
-            
-            this.ctx.beginPath();
-            this.ctx.moveTo(startX, startY);
-            this.ctx.lineTo(endX, endY);
-            this.ctx.stroke();
-          }
-          
-          // Clock hands
-          this.ctx.strokeStyle = '#fff';
-          this.ctx.lineWidth = 2;
-          this.ctx.beginPath();
-          this.ctx.moveTo(centerX, centerY);
-          this.ctx.lineTo(centerX, centerY - radius * 0.4);
-          this.ctx.moveTo(centerX, centerY);
-          this.ctx.lineTo(centerX + radius * 0.3, centerY);
-          this.ctx.stroke();
-          break;
-          
-        default:
-          // Fallback for any other power-ups
-          this.ctx.fillStyle = powerUp.color;
-          this.ctx.fillRect(powerUp.x, powerUp.y, powerUp.width, powerUp.height);
-          break;
+
+      // Use icon if available, otherwise fallback to simple shape
+      const icon = this.powerUpIcons[powerUp.type];
+      if (icon && icon.complete) {
+        // Draw the Western icon
+        this.ctx.drawImage(icon, powerUp.x, powerUp.y, powerUp.width, powerUp.height);
+      } else {
+        // Fallback to colored circle
+        this.ctx.fillStyle = powerUp.color;
+        this.ctx.beginPath();
+        this.ctx.arc(powerUp.x + powerUp.width/2, powerUp.y + powerUp.height/2, powerUp.width/2, 0, Math.PI * 2);
+        this.ctx.fill();
       }
-      
+
       this.ctx.restore();
     }
 
@@ -772,6 +824,140 @@ export class SuperBreakout {
     }
     
     this.ctx.globalAlpha = 1;
+  }
+
+  drawWoodBrick(brick) {
+    const ctx = this.ctx;
+    const { x, y, width, height, color } = brick;
+
+    // Create wood base color (darker version of the main color)
+    const woodColor = this.darkenColor(color, 0.3);
+
+    // Fill base with wood color
+    ctx.fillStyle = woodColor;
+    ctx.fillRect(x, y, width, height);
+
+    // Add wood grain texture with random lines
+    ctx.strokeStyle = this.darkenColor(woodColor, 0.2);
+    ctx.lineWidth = 0.5;
+    ctx.globalAlpha = 0.6;
+
+    // Draw horizontal wood grain lines
+    const grainLines = Math.floor(height / 3);
+    for (let i = 0; i < grainLines; i++) {
+      const lineY = y + (i + 1) * (height / (grainLines + 1));
+      const variance = Math.random() * 2 - 1; // Random variance for rough look
+
+      ctx.beginPath();
+      ctx.moveTo(x + 2, lineY + variance);
+
+      // Create wavy grain line
+      for (let px = 0; px <= width - 4; px += 4) {
+        const waveY = lineY + variance + Math.sin((px / width) * Math.PI * 2) * 0.5;
+        ctx.lineTo(x + 2 + px, waveY);
+      }
+      ctx.stroke();
+    }
+
+    ctx.globalAlpha = 1;
+
+    // Add paint overlay with worn edges
+    ctx.fillStyle = color;
+    ctx.globalAlpha = 0.7;
+
+    // Paint doesn't cover the entire brick (worn/chipped look)
+    const paintInset = 1;
+    ctx.fillRect(
+      x + paintInset,
+      y + paintInset,
+      width - paintInset * 2,
+      height - paintInset * 2
+    );
+
+    ctx.globalAlpha = 1;
+
+    // Add rough edges and weathering
+    ctx.strokeStyle = this.darkenColor(color, 0.4);
+    ctx.lineWidth = 1;
+
+    // Draw rough wooden edges
+    ctx.beginPath();
+
+    // Top edge (slightly uneven)
+    ctx.moveTo(x, y);
+    for (let i = 0; i <= width; i += 2) {
+      const roughness = Math.random() * 0.5;
+      ctx.lineTo(x + i, y + roughness);
+    }
+
+    // Right edge
+    for (let i = 0; i <= height; i += 2) {
+      const roughness = Math.random() * 0.5;
+      ctx.lineTo(x + width - roughness, y + i);
+    }
+
+    // Bottom edge
+    for (let i = width; i >= 0; i -= 2) {
+      const roughness = Math.random() * 0.5;
+      ctx.lineTo(x + i, y + height - roughness);
+    }
+
+    // Left edge
+    for (let i = height; i >= 0; i -= 2) {
+      const roughness = Math.random() * 0.5;
+      ctx.lineTo(x + roughness, y + i);
+    }
+
+    ctx.closePath();
+    ctx.stroke();
+
+    // Add nail holes or imperfections
+    if (Math.random() < 0.3) {
+      ctx.fillStyle = this.darkenColor(woodColor, 0.5);
+      const nailX = x + 2 + Math.random() * (width - 4);
+      const nailY = y + 2 + Math.random() * (height - 4);
+      ctx.beginPath();
+      ctx.arc(nailX, nailY, 0.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Add highlight on top edge for 3D effect
+    ctx.strokeStyle = this.lightenColor(color, 0.3);
+    ctx.lineWidth = 1;
+    ctx.globalAlpha = 0.8;
+    ctx.beginPath();
+    ctx.moveTo(x + 1, y + 1);
+    ctx.lineTo(x + width - 1, y + 1);
+    ctx.stroke();
+
+    // Add shadow on bottom edge
+    ctx.strokeStyle = this.darkenColor(woodColor, 0.3);
+    ctx.beginPath();
+    ctx.moveTo(x + 1, y + height - 1);
+    ctx.lineTo(x + width - 1, y + height - 1);
+    ctx.stroke();
+
+    ctx.globalAlpha = 1;
+  }
+
+  darkenColor(color, factor) {
+    // Convert hex to RGB and darken
+    const hex = color.replace('#', '');
+    const r = Math.max(0, parseInt(hex.substr(0, 2), 16) * (1 - factor));
+    const g = Math.max(0, parseInt(hex.substr(2, 2), 16) * (1 - factor));
+    const b = Math.max(0, parseInt(hex.substr(4, 2), 16) * (1 - factor));
+
+    return `rgb(${Math.floor(r)}, ${Math.floor(g)}, ${Math.floor(b)})`;
+  }
+
+  lightenColor(color, factor) {
+    // Convert hex to RGB and lighten
+    const hex = color.replace('#', '');
+    const r = Math.min(255, parseInt(hex.substr(0, 2), 16) * (1 + factor));
+    const g = Math.min(255, parseInt(hex.substr(2, 2), 16) * (1 + factor));
+    const b = Math.min(255, parseInt(hex.substr(4, 2), 16) * (1 + factor));
+
+    return `rgb(${Math.floor(r)}, ${Math.floor(g)}, ${Math.floor(b)})`;
   }
 
   getGameState() {
@@ -825,4 +1011,4 @@ export class SuperBreakout {
 
 }
 
-export default SuperBreakout;
+export default KnockoffArcade;

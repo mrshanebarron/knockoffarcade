@@ -1,11 +1,11 @@
 /**
- * High Score Manager for SuperBreakout
+ * High Score Manager for KnockoffArcade
  * Handles high score storage, retrieval, and management
  */
 
 export class HighScoreManager {
   constructor() {
-    this.storageKey = 'superbreakout_highscores';
+    this.storageKey = 'knockoffarcade_highscores';
     this.maxScores = 10;
     this.highScores = this.loadHighScores();
   }

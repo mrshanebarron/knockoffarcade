@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 501.14 481.11">
+  <defs>
+    <style>
+      .cls-1 {
+        filter: url(#drop-shadow-1);
+      }
+
+      .cls-2 {
+        fill: #f1a721;
+      }
+
+      .cls-3 {
+        fill: #ffd160;
+      }
+
+      .cls-4 {
+        fill: #d58d28;
+      }
+    </style>
+    <filter id="drop-shadow-1" x="34.39" y="-3.59" width="446.16" height="502.32" filterUnits="userSpaceOnUse">
+      <feOffset dx="7" dy="7"/>
+      <feGaussianBlur result="blur" stdDeviation="5"/>
+      <feFlood flood-color="#231f20" flood-opacity=".75"/>
+      <feComposite in2="blur" operator="in"/>
+      <feComposite in="SourceGraphic"/>
+    </filter>
+  </defs>
+  <g class="cls-1">
+    <polygon class="cls-4" points="367.05 240.53 452.16 124.18 308.89 139.81 250.92 7.74 192.94 139.81 49.67 124.18 134.78 240.53 49.58 356.82 192.89 341.29 250.92 473.37 308.94 341.29 452.25 356.82 367.05 240.53"/>
+    <polygon class="cls-2" points="351.17 240.52 424.67 140.05 300.93 153.55 250.92 39.6 200.9 153.55 77.16 140.05 150.66 240.52 77.09 340.94 200.84 327.53 250.92 441.51 300.99 327.53 424.74 340.94 351.17 240.52"/>
+    <ellipse class="cls-3" cx="250.92" cy="240.55" rx="112.96" ry="113.42"/>
+    <circle class="cls-2" cx="250.92" cy="240.55" r="97.64"/>
+    <g>
+      <circle class="cls-2" cx="250.92" cy="25.65" r="21.08"/>
+      <circle class="cls-2" cx="251.05" cy="455.45" r="21.08"/>
+      <circle class="cls-2" cx="437.46" cy="132.73" r="21.08"/>
+      <circle class="cls-2" cx="63.67" cy="345.07" r="21.08" transform="translate(-136.07 56.57) rotate(-24.24)"/>
+      <circle class="cls-2" cx="63.67" cy="132.73" r="21.08" transform="translate(-33.47 22.12) rotate(-15.66)"/>
+      <circle class="cls-2" cx="437.46" cy="345.07" r="21.08" transform="translate(-66.35 583.02) rotate(-63.55)"/>
+    </g>
+  </g>
+</svg>

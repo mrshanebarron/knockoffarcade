@@ -32,22 +32,7 @@
 body {
   margin: 0;
   padding: 0;
-  background: 
-    radial-gradient(ellipse at center, rgba(101, 67, 33, 0.8), rgba(62, 39, 35, 0.9)),
-    repeating-linear-gradient(
-      90deg,
-      var(--color-brown-primary) 0px,
-      var(--color-brown-secondary) 2px,
-      var(--color-brown-primary) 4px,
-      var(--color-brown-dark) 6px,
-      var(--color-brown-primary) 8px
-    ),
-    repeating-linear-gradient(
-      0deg,
-      transparent 0px,
-      rgba(139, 69, 19, 0.1) 1px,
-      transparent 2px
-    );
+  background: var(--color-brown-darkest);
   font-family: var(--font-primary);
   color: var(--color-sand);
   overflow: hidden;

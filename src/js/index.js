@@ -1,5 +1,5 @@
 /**
- * SuperBreakout Game - Enterprise Edition
+ * KnockoffArcade Game - Enterprise Edition
  * Main entry point
  */
 
@@ -13,7 +13,7 @@ class App {
     this.game = null;
     this.isInitialized = false;
     
-    logger.info('SuperBreakout Enterprise Edition starting...');
+    logger.info('KnockoffArcade Enterprise Edition starting...');
     logger.info('Environment:', {
       userAgent: navigator.userAgent,
       mobile: GameConfig.MOBILE,
@@ -80,9 +80,9 @@ class App {
 
   async initializeGame() {
     // Dynamically import the game module to enable code splitting
-    const { SuperBreakout } = await import('./Game.js');
+    const { KnockoffArcade } = await import('./Game.js');
     
-    this.game = new SuperBreakout();
+    this.game = new KnockoffArcade();
     await this.game.init();
   }
 
