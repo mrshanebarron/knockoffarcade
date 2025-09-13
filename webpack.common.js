@@ -57,7 +57,7 @@ module.exports = {
   plugins: [
     new CleanWebpackPlugin(),
     new HtmlWebpackPlugin({
-      title: 'SuperBreakout - Wild West Edition',
+      title: 'KnockoffArcade - Wild West Edition',
       template: './src/index.html',
       chunks: ['main', 'game'],
       minify: {

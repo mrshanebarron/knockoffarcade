@@ -1,5 +1,5 @@
 {
-  "name": "superbreakout-enterprise",
+  "name": "knockoffarcade-enterprise",
   "version": "2.0.0",
   "description": "Enterprise-grade Wild West Breakout game with modular architecture",
   "main": "src/js/index.js",

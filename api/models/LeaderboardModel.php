@@ -1,6 +1,6 @@
 <?php
 
-namespace SuperBreakout\Models;
+namespace KnockoffArcade\Models;
 
 class LeaderboardModel {
     private $db;

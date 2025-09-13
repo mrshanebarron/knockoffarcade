@@ -1,6 +1,6 @@
 <?php
 
-namespace SuperBreakout\Config;
+namespace KnockoffArcade\Config;
 
 use PDO;
 use PDOException;
@@ -14,7 +14,7 @@ class Database {
     
     public function __construct() {
         $this->host = $_ENV['DB_HOST'] ?? 'localhost';
-        $this->database = $_ENV['DB_NAME'] ?? 'superbreakout';
+        $this->database = $_ENV['DB_NAME'] ?? 'knockoffarcade';
         $this->username = $_ENV['DB_USER'] ?? 'root';
         $this->password = $_ENV['DB_PASS'] ?? '';
         
@@ -38,7 +38,7 @@ class Database {
         } catch (PDOException $e) {
             // Fallback to SQLite for development
             try {
-                $sqliteFile = __DIR__ . '/../../data/superbreakout.db';
+                $sqliteFile = __DIR__ . '/../../data/knockoffarcade.db';
                 $this->connection = new PDO("sqlite:" . $sqliteFile, null, null, [
                     PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                     PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC

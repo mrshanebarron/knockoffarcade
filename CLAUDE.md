@@ -90,7 +90,7 @@ api/
 ### Game Components
 1. **Ball** (`src/js/components/Ball.js`): Ball entity with physics, power-ups, and visual effects
 2. **Paddle** (`src/js/components/Paddle.js`): Player paddle with AI assistance and power-ups
-3. **SuperBreakout** (`src/js/Game.js`): Main game orchestrator
+3. **KnockoffArcade** (`src/js/Game.js`): Main game orchestrator
 
 ### Configuration Management
 - **GameConfig** (`src/js/config/GameConfig.js`): Centralized game configuration
@@ -147,7 +147,7 @@ api/
 ### Required Environment Variables (.env)
 ```bash
 DB_HOST=localhost
-DB_NAME=superbreakout
+DB_NAME=knockoffarcade
 DB_USER=root
 DB_PASS=
 

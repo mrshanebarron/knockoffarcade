@@ -1,6 +1,6 @@
 {
-    "name": "superbreakout/api",
-    "description": "PHP backend for SuperBreakout game",
+    "name": "knockoffarcade/api",
+    "description": "PHP backend for KnockoffArcade game",
     "type": "project",
     "require": {
         "php": ">=8.0",
@@ -18,7 +18,7 @@
     },
     "autoload": {
         "psr-4": {
-            "SuperBreakout\\": "api/"
+            "KnockoffArcade\\": "api/"
         }
     },
     "scripts": {

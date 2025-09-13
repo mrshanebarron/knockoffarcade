@@ -1,10 +1,10 @@
 <?php
 
-namespace SuperBreakout\Controllers;
+namespace KnockoffArcade\Controllers;
 
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
-use SuperBreakout\Models\LeaderboardModel;
+use KnockoffArcade\Models\LeaderboardModel;
 use Monolog\Logger;
 
 class LeaderboardController {

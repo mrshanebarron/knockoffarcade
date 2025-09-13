@@ -3,12 +3,12 @@ require_once __DIR__ . '/../vendor/autoload.php';
 
 use Slim\Factory\AppFactory;
 use Slim\Middleware\CorsMiddleware;
-use SuperBreakout\Controllers\LeaderboardController;
-use SuperBreakout\Controllers\GameStateController;
-use SuperBreakout\Controllers\AchievementController;
-use SuperBreakout\Middleware\ValidationMiddleware;
-use SuperBreakout\Middleware\AuthMiddleware;
-use SuperBreakout\Config\Database;
+use KnockoffArcade\Controllers\LeaderboardController;
+use KnockoffArcade\Controllers\GameStateController;
+use KnockoffArcade\Controllers\AchievementController;
+use KnockoffArcade\Middleware\ValidationMiddleware;
+use KnockoffArcade\Middleware\AuthMiddleware;
+use KnockoffArcade\Config\Database;
 use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
 
@@ -28,7 +28,7 @@ $app->addRoutingMiddleware();
 $errorMiddleware = $app->addErrorMiddleware(true, true, true);
 
 // Set up logging
-$logger = new Logger('superbreakout-api');
+$logger = new Logger('knockoffarcade-api');
 $logger->pushHandler(new StreamHandler(__DIR__ . '/logs/app.log', Logger::DEBUG));
 
 // Initialize database
