@@ -104,7 +104,11 @@
 
 /* SALOON BUILDING */
 .saloon-building {
-  display: none;
+  position: relative;
+  width: 400px;
+  height: 350px;
+  margin: 0 auto;
+  margin-top: 40px;
 }
 
 /* Saloon Roof */
