@@ -372,21 +372,34 @@ export class KnockoffArcade {
       return;
     }
 
+    // Function to start music on interaction
+    const startMusicOnInteraction = async () => {
+      if (!this.musicStarted) {
+        this.musicStarted = true;
+        await this.audioManager.startBackgroundMusic();
+      }
+    };
+
     // Function to check if button should be enabled
     const updateButtonState = () => {
       const playerName = this.playerNameInput.value.trim();
+      const subtext = this.startButton.querySelector('.btn-subtext');
       if (playerName.length > 0) {
         this.startButton.disabled = false;
         this.startButton.classList.remove('disabled');
-        if (GameConfig.MOBILE) {
-          this.startButton.querySelector('.btn-subtext').textContent = 'Touch to enter';
-        } else {
-          this.startButton.querySelector('.btn-subtext').textContent = 'Press SPACE when ready';
+        if (subtext) {
+          if (GameConfig.MOBILE) {
+            subtext.textContent = 'Touch to enter';
+          } else {
+            subtext.textContent = 'Press SPACE when ready';
+          }
         }
       } else {
         this.startButton.disabled = true;
         this.startButton.classList.add('disabled');
-        this.startButton.querySelector('.btn-subtext').textContent = 'Enter name first';
+        if (subtext) {
+          subtext.textContent = 'Enter name first';
+        }
       }
     };
 
@@ -394,23 +407,13 @@ export class KnockoffArcade {
     this.playerNameInput.addEventListener('input', updateButtonState);
     this.playerNameInput.addEventListener('keyup', updateButtonState);
 
-    // Handle button click/touch
-    this.startButton.addEventListener('click', async (e) => {
+    // Handle button interaction (unified for click and touch)
+    const handleStartButton = async (e) => {
       e.preventDefault();
-      await startMusicOnInteraction();
-      if (!this.startButton.disabled && this.gameState === 'start') {
-        const playerName = this.playerNameInput.value.trim();
-        if (playerName.length > 0) {
-          this.audioManager.playSound('menuConfirm');
-          this.startGame();
-        }
-      }
-    });
+      e.stopPropagation();
 
-    // Handle touch events for mobile
-    this.startButton.addEventListener('touchstart', async (e) => {
-      e.preventDefault();
       await startMusicOnInteraction();
+
       if (!this.startButton.disabled && this.gameState === 'start') {
         const playerName = this.playerNameInput.value.trim();
         if (playerName.length > 0) {
@@ -418,7 +421,13 @@ export class KnockoffArcade {
           this.startGame();
         }
       }
-    });
+    };
+
+    // Add event listeners for both click and touch
+    this.startButton.addEventListener('click', handleStartButton);
+
+    // Add touchend instead of touchstart to prevent double firing
+    this.startButton.addEventListener('touchend', handleStartButton, { passive: false });
 
     // Initial button state
     updateButtonState();

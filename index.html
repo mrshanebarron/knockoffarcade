@@ -513,7 +513,49 @@
                 <p style="color: #5d4037; font-size: 14px; margin: 8px 0;">Armed and extremely dangerous</p>
             </div>
             <p style="color: #8b4513; font-size: 16px; margin: 15px 0; font-family: 'New Rocker', serif;">→ Use WASD or ARROW KEYS to aim ←</p>
-            <p class="pulse lightning" style="color: #a0522d; font-size: 22px; font-family: 'Butcherman', serif; margin: 20px 0; text-shadow: 2px 2px 0px #3e2723;">★ PRESS SPACE FOR SHOWDOWN! ★</p>
+            <button class="saloon-door-btn" disabled style="
+                background: linear-gradient(145deg, #8b4513, #654321);
+                border: 4px solid #daa520;
+                color: #f5deb3;
+                padding: 20px 40px;
+                border-radius: 10px;
+                font-family: 'Butcherman', serif;
+                font-size: 24px;
+                margin: 20px 0;
+                cursor: pointer;
+                box-shadow: 0 6px 12px rgba(139, 69, 19, 0.4), inset 0 2px 4px rgba(222, 184, 135, 0.8);
+                text-shadow: 2px 2px 0px #3e2723;
+                transition: all 0.3s ease;
+                text-transform: uppercase;
+                position: relative;
+            ">
+                <span class="btn-text">★ START SHOWDOWN! ★</span>
+                <br>
+                <span class="btn-subtext" style="font-size: 14px; opacity: 0.8;">Enter name first</span>
+            </button>
+            <style>
+                .saloon-door-btn:not(:disabled):hover {
+                    transform: scale(1.05);
+                    box-shadow: 0 8px 16px rgba(139, 69, 19, 0.6), inset 0 2px 4px rgba(222, 184, 135, 0.8);
+                }
+                .saloon-door-btn:disabled {
+                    opacity: 0.6;
+                    cursor: not-allowed;
+                }
+                .saloon-door-btn:not(:disabled):active {
+                    transform: scale(0.98);
+                }
+                /* Mobile-specific styles */
+                @media (max-width: 768px) and (pointer: coarse) {
+                    .saloon-door-btn {
+                        touch-action: manipulation;
+                        -webkit-tap-highlight-color: transparent;
+                        font-size: 20px !important;
+                        padding: 15px 30px !important;
+                    }
+                }
+            </style>
+            <p class="pulse lightning" style="color: #a0522d; font-size: 18px; font-family: 'Butcherman', serif; margin: 10px 0; text-shadow: 2px 2px 0px #3e2723;">OR PRESS SPACE</p>
             <p style="font-size: 14px; color: #8b4513; margin-top: 20px; font-style: italic;">~ Sheriff's Department ~ Dodge City, Kansas ~</p>
         </div>
         
@@ -557,7 +599,7 @@
     </div>
 
     <script>
-        class SuperBreakout {
+        class KnockoffArcade {
             constructor() {
                 this.canvas = document.getElementById('gameCanvas');
                 this.ctx = this.canvas.getContext('2d');
@@ -3951,7 +3993,7 @@
         }
         
         window.addEventListener('load', () => {
-            window.game = new SuperBreakout();
+            window.game = new KnockoffArcade();
         });
     </script>
 </body>
